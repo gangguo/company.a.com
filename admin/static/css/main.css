@@ -1,0 +1,47 @@
+/*文件上传--图片*/
+
+.uploader-group-img .uploader-list {
+  float: left;
+}
+
+.uploader-group-img .uploader-picker {
+  width: 100px;
+  height: 100px;
+  background-size: 100% 100%;
+  border: 1px solid #ccc !important;
+  padding: 0;
+  overflow: hidden;
+}
+
+.uploader-group-img .uploader-picker label {
+  position: absolute;
+  top: 0;
+}
+
+.uploader-group-img .uploader-picker:active,
+.uploader-group-img .uploader-picker:focus {
+  background: none;
+  border: none;
+  opacity: 1;
+}
+
+.uploader-group-img .webuploader-pick,
+.uploader-group-img .fa-upload,
+.uploader-group-img .uploader-picker div {
+  width: 100px !important;
+  height: 100px !important;
+  display: block;
+}
+
+.uploader-group-img .webuploader-pick {
+  opacity: 0;
+}
+
+.uploader-group-img .webuploader-element-invisible {
+  width: 100px;
+  height: 100px;
+  display: block;
+}
+input[type=radio]{
+    margin: 4px 0px 4px 30px;
+}
