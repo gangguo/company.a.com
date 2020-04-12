@@ -50,38 +50,27 @@ class power
      */
     public function __construct($authority = [])
     {
-        $this->config    = empty($authority) ? sephp::$_config['_authority'] : $authority;
+        $this->_mark = '_' . APP_NAME . '_';
+        $this->config = empty($authority) ? sephp::$_config['_authority'] : $authority;
 
-        if(empty($this->config['user_type']))
+        if(!empty(session::get($this->_mark)))
         {
-            throw new \Exception('Authority info has does not set "user_type" field!');
-        }
-        $this->_user_type = $this->config['user_type'];
-        $this->_uid_field = $this->config['user_type'] . '_id';
-
-        $this->_mark        = '_' . APP_NAME . '_'.$this->_user_type.'_';
-        $this->_table       = '#PB#_'.$this->_user_type;
-        $this->_table_pam   = '#PB#_'.$this->_user_type.'_pam';
-        $this->_table_group = '#PB#_'.$this->_user_type.'_group';
-
-        switch (func::get_value($this->config, 'login_type', ''))
-        {
-            case 'token':
-                $this->info_by_token(func::get_value(req::$forms, 'token', ''), $this->_info);
-                break;
-            case 'session':
-                $this->_info = session::get($this->_mark);
-                break;
-        }
-
-        if(!empty($this->_info))
-        {
-            sephp::$_user =$this->_info;
-            sephp::$_uid = $this->_uid = $this->_info[$this->_uid_field];
-            $this->_showname = $this->show_user_name($this->_info);
+           $this->set_info(session::get($this->_mark));
         }
 
         $this->is_login();
+    }
+
+    /**
+     * 设置信息
+     * @Author   GangKui
+     * @DateTime 2020-04-12
+     */
+    public function set_info(array $info)
+    {
+        sephp::$_user   = $this->_info = $info;
+        sephp::$_uid    = $this->_uid = $this->_info['admin_id']??$this->_info['member_id'];
+        session::set($this->_mark, $this->_info);
     }
 
     /**
@@ -122,7 +111,7 @@ class power
         //检验登陆
         if(empty($this->_uid))
         {
-            show_msg::error('您还没有登陆',$this->config['login_url']);
+            show_msg::error('您还没有登陆', $this->config['login_url']);
         }
 
         //权限检验
@@ -176,72 +165,6 @@ class power
     }
 
     /**
-     * 记录登陆成功的登陆日志
-     * @Author   GangKui
-     * @DateTime 2019-11-09
-     * @param    array      $data [
-     *      session_id => '',
-     *      app_token. => '',
-     * ]
-     */
-    public function add_login_log($data = [])
-    {
-
-        $result = false;
-        do{
-
-            $update_data = func::data_filter([
-                'session_id' => ['type' => 'text', 'default' => '', 'required' => empty($data['app_token'])],
-                'app_token'  => ['type' => 'text', 'default' => '', 'required' => empty($data['session_id'])],
-                'uptime'     => ['type' => 'int',  'default' => TIME_SEPHP]
-            ], $data);
-
-            if(!is_array($update_data))
-            {
-                break;
-            }
-
-            //记录登陆日志
-            $data = [
-                'session_id' => func::get_value($data, 'session_id', ''),
-                'app_token' => func::get_value($data, 'app_token', ''),
-                'status'     => 1,//登陆成功
-                'login_ip'   => func::get_client_ip(),
-                'username'   => $this->_info['username'],
-                'login_time' => TIME_SEPHP,
-                'login_uid'  => $this->_info[$this->_uid_field],
-                'user_type'  => $this->_user_type,
-                'agent'      => func::get_value($_SERVER, 'HTTP_USER_AGENT', ''),
-            ];
-
-            if(false === db::insert('#PB#_login_log')->set($data)->execute())
-            {
-                log::error('用户登陆，登陆日志写入失败。：'. var_export($data, 1));
-                break;
-            }
-
-
-            if(
-                false === db::update($this->_table_pam)
-                    ->set($update_data)
-                    ->where($this->_uid_field, $this->_uid)
-                    ->execute()
-            )
-            {
-                log::error('用户登陆，更新会话标识符失败。：' . var_export($update_data, 1));
-                break;
-            }
-
-            session::set($this->_mark, $this->_info);
-
-            $result = true;
-
-        }while(false);
-
-        return $result;
-    }
-
-    /**
      * 会员 生成 密码
      * @param $password
      * @param null $password_account
@@ -273,182 +196,21 @@ class power
      * @param    array      &$info [description]
      * @return   [type]            [description]
      */
-    public function login_check($conds = [], &$info = [])
+    public function login_check($username, $password)
     {
         $result = false;
 
         do{
-            if(false === $this->login_for_name($conds))
+            if(false === $this->_info = call_user_func_array($this->config['auto_func'],[$username, $password]))
             {
                 break;
-            }
-
-            $this->_info = self::get_user_info($this->_uid);
-
-             //获取用户权限
-            if(!empty($this->_info['group_id']) && !empty($this->_info['powerlist']))
-            {
-                $this->_info['powerlist'] = $this->_info['powerlist'] === '*' ? '*' : json_decode($this->_info['powerlist'], true);
             }
 
             $result = true;
 
         }while (false);
 
-        return $result;
-    }
-
-    /**
-     * 用户名的方式登陆
-     * @Author   GangKui
-     * @DateTime 2019-11-09
-     * @param    [type]     $data [description]
-     * @param    [type]     &$uid [description]
-     * @return   [type]           [description]
-     */
-    public function login_for_name($data, &$uid = 0)
-    {
-        $result = false;
-
-        $data_filter = func::data_filter([
-            'username'  => ['type' => 'text', 'require' => true, 'default' => ''],
-            'password'  => ['type' => 'text', 'require' => true, 'default' => ''],
-            'group_id' => ['type' => 'text', 'require' => false, 'default' => ''],
-        ], $data);
-
-        do{
-
-            if(!is_array($data_filter))
-            {
-                break;
-            }
-
-            $password = db::select('password,' . $this->_uid_field)
-                ->from($this->_table_pam)
-                ->where('username', '=', $data_filter['username'])
-                ->as_row()
-                ->execute();
-
-            if(empty($password) || !password_verify($data_filter['password'], $password['password']))
-            {
-                $data = [
-                    'session_id' => session_id(),
-                    'status'     => 2,
-                    'login_ip'   => func::get_client_ip(),
-                    'username'   => $data_filter['username'],
-                    'login_time' => TIME_SEPHP,
-                    'login_uid'   => 0,
-                    'user_type'  => $this->_user_type,
-                    'agent'      => $_SERVER['HTTP_USER_AGENT'],
-                    'remark'     => '用户名或者密码错误',
-                ];
-                db::insert('#PB#_login_log')->set($data)->execute();
-                log::info('登陆失败,用户名或者密码错误');
-                break;
-            }
-
-            $result = $this->_uid = $uid = $password[$this->_uid_field];
-
-        }while(false);
-
-        return $result;
-    }
-
-    /**
-     * app_token登陆
-     * @Author   GangKui
-     * @DateTime 2019-11-05
-     * @return   [type]     [description]
-     */
-    public function info_by_token($app_token, &$info = [])
-    {
-        $result = false;
-
-        do{
-            if(64 != strlen($app_token))
-            {
-                break;
-            }
-
-            $data = db::select($this->_uid_field.',uptime')
-                ->from($this->_table_pam)
-                ->where('app_token', '=', $app_token)
-                ->where('uptime', '>', TIME_SEPHP - func::get_value($this->config, 'token_time_out', 86400))
-                ->as_row()
-                ->execute();
-
-            if(empty($data[$this->_uid_field]))
-            {
-                break;
-            }
-
-            if(md5($data[$this->_uid_field]) !== substr($app_token, 16, 32))
-            {
-                break;
-            }
-
-            $info = $this->_info = $this->get_user_info($data[$this->_uid_field]);
-
-        }while(false);
-
-        return $result;
-    }
-
-    /**
-     * 微信登陆验证
-     * @Author   GangKui
-     * @DateTime 2019-11-09
-     * @param    [type]     $data [description]
-     * @param    integer    &$uid [description]
-     * @return   [type]           [description]
-     */
-    public function login_for_wechat($data, &$uid = 0)
-    {
-
-    }
-    /**
-     * 检测用户名是否存在
-     * @param string $login_account
-     * @return mixed
-     */
-    public function get_user_info($uid, &$info = [])
-    {
-        $field = [
-            $this->_table.'.'.$this->_uid_field, 'nickname', 'realname', 'email', 'mobile',$this->_table.'.group_id',
-            'group_name', 'powerlist', $this->_table_pam . '.username'
-        ];
-        $info = db::select($field)
-                ->from($this->_table)
-                ->join($this->_table_group, 'right')
-                ->on($this->_table_group . '.group_id', '=', $this->_table . '.group_id')
-                ->join($this->_table_pam, 'left')
-                ->on($this->_table_pam.'.'.$this->_uid_field , '=', $this->_table.'.'.$this->_uid_field)
-                ->where($this->_table.'.'.$this->_uid_field, '=', $uid)
-                ->as_row()
-                ->execute();
-        return $info;
-    }
-
-    /**
-     * 显示用户名称
-     * @Author   GangKui
-     * @DateTime 2019-11-09
-     * @param    [type]     $info [description]
-     * @return   [type]           [description]
-     */
-    public function show_user_name($info)
-    {
-        $name = '-无名氏-';
-        foreach (['nickname', 'username', 'realname'] as $f)
-        {
-            if(!empty($info[$f]))
-            {
-                $name = $info['nickname'];
-                break;
-            }
-        }
-
-        return $name;
+        return $this->_info;
     }
 
 }

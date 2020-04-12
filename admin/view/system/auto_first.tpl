@@ -21,10 +21,10 @@
                             <div class="row">
                                 <div class="col-sm-12">
                                     <div class="form-group">
-                                        <input id="userName" style="width: 50%;margin: auto;"  name="username" type="text" readonly class="form-control required" value="<{$username}>" />
+                                        <input id="userName" style="width: 50%;margin: auto;"  name="username" type="text" readonly class="form-control required" value="<{request_em key=username}>" />
                                     </div>
                                     <div class="form-group">
-                                        <input id="password" style="width: 50%;margin: auto;"  name="password" type="password" class="form-control required" value="<{$pass}>" />
+                                        <input id="password" style="width: 50%;margin: auto;"  name="password" type="password" class="form-control required" value="<{request_em key=password}>" />
                                     </div>
                                 </div>
                             </div>
@@ -114,26 +114,33 @@
             onStepChanging:function(event,currentIndex,newIndex){
                 console.log(currentIndex,newIndex);
 
-                if(currentIndex > newIndex){
+                if(currentIndex > newIndex)
+                {
                     return true
                 }
-                if(newIndex===3 && Number($("#age").val())<18){
+                if(newIndex===3 && Number($("#age").val())<18)
+                {
                     //return false
                 }
                 var form=$(this);
 
 
-                if(currentIndex < newIndex){
+                if(currentIndex < newIndex)
+                {
                     $(".body:eq("+newIndex+") label.error", form).remove();
                     $(".body:eq("+newIndex+") .error",form).removeClass("error")
                 }
-                if((newIndex == 2)){
+
+                if((newIndex == 2))
+                {
                     $.ajax({
                         type: "POST",
                         url: "?ct=public&ac=auth_third_bind_secert",
                         data: "username=" + $('input[name="username"]').val(),
-                        success: function(msg){
-                            var msg = JSON.parse(msg);
+                        success: function(msg)
+                        {
+                            console.log(typeof(msg));
+                            console.log((msg.data));
                             if(msg.code == 200){
                                 $('#qr_code_url').attr('href',msg.data.qr_code_url);
                                 $('#qr_code_url').children('img').attr('src',msg.data.qr_code_url);
@@ -153,7 +160,6 @@
                         url: "?ct=public&ac=auth_finish",
                         data: $('form').serialize(),
                         success: function(msg){
-                            var msg = JSON.parse(msg);
                             if(msg.code == 200){
                                 result = true;
                             }else{
@@ -207,6 +213,8 @@
         })
 
     });
+
+
 
 </script>
 

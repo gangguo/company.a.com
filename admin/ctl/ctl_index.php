@@ -14,23 +14,27 @@ use sephp\core\config;
 
 use admin\model\mod_system;
 use admin\model\mod_content;
+use common\model\pub_mod_message;
 
 /**
  * Class ctl_index
  */
 class ctl_index {
 
-	public function index() {
+	public function index()
+    {
 
-		view::assign('menuTitle', 'menuTitle');
+        view::assign('menuTitle', 'menuTitle');
 		//$menus = mod_system::parseMenu();
 		//view::assign('menus',$menus);
 		//$menuHtml = view::fetch('system.menu');
 		//view::assign('meenuHtml',$menuHtml);
-		$top_menu  = mod_system::get_menus('top_menu');
-		$left_menu = mod_system::get_menus('left_menu');
+		$top_menu  = config::get_menus('top_menu');
+		$left_menu = config::get_menus('left_menu');
 		view::assign('top_menu', $top_menu);
 		view::assign('left_menu', json_encode($left_menu, JSON_UNESCAPED_UNICODE));
+        view::assign('firstMenuId', 'webstationManagement');
+
 		view::assign('realname', sephp::$_user['realname']);
 		view::assign('goup_name', empty(sephp::$_user['group_name'])?'---':sephp::$_user['group_name']);
 
@@ -53,7 +57,15 @@ class ctl_index {
 	}
 
 	//默认页面
-	public function home() {
+	public function home()
+    {
+        $message = pub_mod_message::getlist([
+            'where' => [
+                'deltime' => 0,
+                'status' => 1,
+            ],
+        ]);
+        view::assign('message', empty($message) ? [] : $message);
 		view::display('home');
 	}
 }

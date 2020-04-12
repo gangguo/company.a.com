@@ -22,18 +22,9 @@ class mod_admin_group extends pub_mod_model
         $table        = '#PB#_admin_group',
         $pk           = 'group_id',
         $fields       = [
-                'group_id'     => ['type' => 'int','required' => true, 'comment' => '管理员ID'],
-	            'name'     	   => ['type' => 'text', 'required' => true, 'comment' => '组ID'],
-	            'remark'       => ['type' => 'text', 'default' => 0, 'comment' => '登陆名'],
-	            'powerlist'    => ['type' => 'text', 'default' => null, 'comment' => '登陆密码'],
-	            'status'       => ['type' => 'text', 'default' => 0, 'comment' => '性别'],
-	            'create_time'  => ['type' => 'int', 'required' => false, 'default' => 0, 'comment' => '添加时间'],
-	            'create_user'  => ['type' => 'text', 'default' => 0, 'comment' => '更新时间'],
-                'uptime'       => ['type' => 'int', 'default' => 0, 'comment' => '删除时间'],
-                'upuser'       => ['type' => 'text', 'default' => 0, 'comment' => '删除时间'],
-                'deltime'      => ['type' => 'int', 'default' => 0, 'comment' => '删除时间'],
-                'deluser'      => ['type' => 'text', 'default' => 0, 'comment' => '删除时间'],
-            ],
+            'group_id','group_name','remark','powerlist','status',
+            'create_time', 'create_user', 'deltime', 'deluser'
+        ],
         $status = [
             '1' => '正常',
             '2' => '禁用',
@@ -45,8 +36,6 @@ class mod_admin_group extends pub_mod_model
         $data = self::getdump([
             'where'    => [self::$pk => $group_id]
         ]);
-
-        return self::data_format($data);
     }
 
     /**
@@ -56,29 +45,40 @@ class mod_admin_group extends pub_mod_model
      * @param    [type]     $data [description]
      * @return   [type]           [description]
      */
-    public static function data_format($data = [])
+    public static function data_format($data)
     {
-        if(empty($data)) return $data;
+        $single = is_array(reset($data)) ? false : true;
+        $data = $single ? [$data] : $data;
 
-        if(isset($data['powerlist']))
+        foreach ($data as &$v)
         {
-            switch ($data['powerlist'])
+            if(isset($v['powerlist']))
             {
-                case '*':
-                    $data['powerlist'] = '*';
-                    break;
-                case '':
-                    $data['powerlist'] = [];
-                    break;
-                case null:
-                    $data['powerlist'] = [];
-                    break;
-                default:
-                    $data['powerlist'] = json_decode($power['powerlist'], true);
-                    break;
+                switch ($v['powerlist'])
+                {
+                    case '*':
+                        $v['powerlist'] = '*';
+                        break;
+                    case '':
+                        $v['powerlist'] = [];
+                        break;
+                    case null:
+                        $v['powerlist'] = [];
+                        break;
+                    default:
+                        $v['powerlist'] = json_decode($v['powerlist'], true);
+                        break;
+                }
             }
+
+            if(!empty($v['status']))
+            {
+                $v['show_status'] = self::$status[$v['status']];
+            }
+
         }
 
-        return $data;
+
+        return $single ? reset($data) : $data;
     }
 }

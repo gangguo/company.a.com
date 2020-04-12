@@ -4,7 +4,7 @@
         <div class="col-sm-12">
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
-                    <h5>编辑【<{$data.name}>】的权限 <small></small></h5>
+                    <h5>编辑【<{$data.group_name}>】的权限 <small></small></h5>
                 </div>
                 <div class="ibox-content">
                     <form class="form-horizontal m-t validate"  method="post" action="<{$_self_url}>" id="signupForm" >

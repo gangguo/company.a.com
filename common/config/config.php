@@ -87,6 +87,11 @@ $config['redis'] = [
 	'prefix'     => '',
 ];
 
+$config['upload'] = [
+    'upload_www'           => 'http://video.a.com',
+
+];
+
 //路由解析配置
 $config['route'] = [
 	'url_route_on'         => ['index'], //开启路由模式的项目

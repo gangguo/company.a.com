@@ -36,6 +36,7 @@
                                 <th>登陆ip</th>
                                 <th>登陆时间</th>
                                 <th>状态</th>
+                                <th>操作</th>
                             </tr>
 
                             <{foreach from=$list item=data }>
@@ -45,6 +46,7 @@
                                 <td> <{$data.login_ip}> </td>
                                 <td> <{$data.login_time|date_format:'%Y-%m-%d %H:%M:%S'}> </td>
                                 <td> <{if $data.status == 1}>登陆成功<{else}>登陆失败<{/if}> </td>
+                                <td> <a class="btn btn-xs btn-danger" href="<{$del_url}><{$data.id}>">删除</a> </td>
                             </tr>
                             <{foreachelse}>
 

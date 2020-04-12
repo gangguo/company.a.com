@@ -1,12 +1,11 @@
 <menus>
 
     <menu name='网站管理'  icon='fa fa-gears' id='webstationManagement' >
-        <menu name='导航菜单' ct='system' ac='menu_index' icon='fa fa-dashboard'  />
+        <menu name='导航菜单' ct='system' ac='menu_index' icon='fa fa-dashboard' default='true' />
         <menu name='基础设置' ct='system' ac='baise_config' icon='fa fa-dashboard'  />
         <menu name='简介内容' ct='system' ac='basic_content' icon='fa fa-file-text-o' display='' />
         <menu name='友情链接' ct='system' ac='friend_link' icon='fa fa-dashboard'  />
-        <menu name='会员管理' ct='areas' ac='list' icon='fa fa-dashboard'  />
-        <menu name='留言管理' ct='video' ac='add' icon='fa fa-dashboard'  />
+        <menu name='留言管理' ct='message' ac='list' icon='fa fa-dashboard'  />
     </menu>
 
      <menu name='产品管理'  icon='fa fa-gears' id='galleryManagement' >
@@ -37,7 +36,7 @@
 
     <menu name='控制中心'  icon='fa fa-gears' id='systemManagement' >
         <menu name='菜单设置' ct='system' ac='menus' icon='fa fa-dashboard'  />
-        <menu name='用户管理' icon='fa fa-user'  default='true' >
+        <menu name='用户管理' icon='fa fa-user'   >
             <menu name='用户组管理' ct='admin' ac='grouplist' icon='fa fa-users' display='' />
             <menu name='用户列表' ct='admin' ac='userlist' icon='fa fa-user' display='' />
             <menu name='在线用户' ct='admin' ac='online' icon='fa fa-users' display='' />

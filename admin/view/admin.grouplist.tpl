@@ -4,7 +4,7 @@
         <div class="col-sm-12">
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
-                    <h5>自定义响应式表格</h5>
+                    <h5>列表</h5>
                 </div>
                 <div class="ibox-content">
                     <div class="row">
@@ -28,7 +28,7 @@
                         <table class="table table-striped table-bordered table-hover dataTables-example">
                             <tr>
                                 <th>ID</th>
-                                <th>名称</th>
+                                <th>组名</th>
                                 <th>状态</th>
                                 <th>备注</th>
                                 <th>操作</th>
@@ -37,12 +37,13 @@
                             <{foreach from=$list item=data }>
                             <tr>
                                 <td> <{$data.group_id}> </td>
-                                <td> <{$data.name}> </td>
+                                <td> <{$data.group_name}> </td>
                                 <td> <{if $data.status == 1}>已启用<{else}>已禁用<{/if}> </td>
                                 <td><span class="pie"> <{$data.remark}></span></td>
                                 <td>
                                     <a class="btn btn-xs btn-danger" href="<{$edit_url}>&group_id=<{$data.group_id}>">信息编辑</a>
                                     <a class="btn btn-xs btn-success" href="<{$power_edit_url}>&group_id=<{$data.group_id}>">权限编辑</a>
+                                    <a class="btn btn-xs btn-danger" href="<{$del_url}>&group_id=<{$data.group_id}>">删除</a>
                                 </td>
                             </tr>
                             <{foreachelse}>

@@ -14,7 +14,7 @@ define('APP_DEBUG',true);
 $_authority = [
     'need_login' => true,
     'power_check'=> true,
-    'auto_func'  => ['\admin\model\mod_admin', 'login'],//登陆验证的方法
+    'auto_func'  => ['\admin\model\mod_admin_pam', 'password_check'],//登陆验证的方法
     'login_type' => 'session',
     'not_login'  => ['public'],
     'login_url'  => '?ct=public&ac=login',

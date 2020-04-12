@@ -140,22 +140,33 @@ class session
     {
         empty(self::$init) && self::init();
         $prefix = !is_null($prefix) ? $prefix : self::$prefix;
-        if ('' == $name) {
+        if ('' == $name)
+        {
             // 获取全部的session
             $value = $prefix ? (!empty($_SESSION[$prefix]) ? $_SESSION[$prefix] : null) : $_SESSION;
-        } elseif ($prefix) {
+        }
+        elseif ($prefix)
+        {
             // 获取session
-            if (strpos($name, '.')) {
+            if (strpos($name, '.'))
+            {
                 list($name1, $name2) = explode('.', $name);
                 $value = isset($_SESSION[$prefix][$name1][$name2]) ? $_SESSION[$prefix][$name1][$name2] : null;
-            } else {
+            }
+            else
+            {
                 $value = isset($_SESSION[$prefix][$name]) ? $_SESSION[$prefix][$name] : null;
             }
-        } else {
-            if (strpos($name, '.')) {
+        }
+        else
+        {
+            if (strpos($name, '.'))
+            {
                 list($name1, $name2) = explode('.', $name);
                 $value = isset($_SESSION[$name1][$name2]) ? $_SESSION[$name1][$name2] : null;
-            } else {
+            }
+            else
+            {
                 $value = isset($_SESSION[$name]) ? $_SESSION[$name] : null;
             }
         }

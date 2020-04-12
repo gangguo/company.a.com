@@ -19,20 +19,11 @@ class pub_mod_login_log extends pub_mod_model
 {
     public static
         $table  = '#PB#_login_log',
-        $pk     = 'member_id',
+        $pk     = 'id',
         $fields = [
-            'id'         => ['type' => 'int',  'required' => false, 'comment' => '日志ID'],
-            'session_id' => ['type' => 'text', 'required' => false, 'comment' => '用户登陆session_id'],
-            'status'     => ['type' => 'text', 'default' => 0, 'comment' => '状态'],
-            'login_ip'   => ['type' => 'text', 'default' => null, 'comment' => '登陆IP'],
-            'username'   => ['type' => 'text', 'default' => 0, 'comment' => '登陆名称'],
-            'login_time' => ['type' => 'text', 'default' => 0, 'comment' => '登陆时间'],
-            'login_type'  => ['type' => 'text', 'default' => 0, 'comment' => '登陆方式'],
-            'agent'      => ['type' => 'text', 'default' => null, 'comment' => '邮箱'],
-            'user_type'  => ['type' => 'text', 'default' => null, 'comment' => '来源ID'],
-            'remark'     => ['type' => 'text', 'default' => null, 'comment' => '来源url'],
+            'id', 'session_id', 'status', 'login_ip', 'username', 'login_time', 'login_type', 'agent', 'user_type', 'remark'
         ],
-        $user_type = [
+       $user_type = [
             'member' => '用户表',
             'admin'  => '管理员表',
         ],
@@ -47,8 +38,6 @@ class pub_mod_login_log extends pub_mod_model
             '4' => 'wechat',
             '5' => 'alipay',
         ];
-
-
 
         /**
          * 获取最近一条登陆信息
@@ -73,17 +62,47 @@ class pub_mod_login_log extends pub_mod_model
          * @DateTime 2019-11-05
          * @param    [type]     $data [description]
          */
-        public static function add($data)
+        public static function add(array $data)
         {
-            $data['login_ip'] = func::get_client_ip();
-            $data['login_time'] = TIME_SEPHP;
-            $data['agent'] = $_SERVER['HTTP_USER_AGENT'];
+            $data_filter = func::data_filter([
+                'status'    => ['type' => 'int', 'required' => true],
+                'username'  => ['type' => 'int', 'required' => true],
+                'login_type'=> ['type' => 'int', 'required' => true],
+                'user_type' => ['type' => 'int', 'required' => true],
+                'session_id'=> ['type' => 'int', 'required' => false, 'default' => ''],
+                'remark'    => ['type' => 'int', 'required' => false, 'default' => ''],
+            ], $data);
 
-            $insert_data = func::data_filter(self::$fields, $data);
-            if(!is_array($insert_data))
+            if(!is_array($data_filter))
             {
                 return false;
             }
-            return self::insert($insert_data);
+
+            $data_filter['login_ip']    = func::get_client_ip();
+            $data_filter['login_time']  = TIME_SEPHP;
+            $data_filter['agent']       = $_SERVER['HTTP_USER_AGENT'];
+
+            return self::insert($data_filter);
         }
+
+    public static function data_format($data)
+    {
+        $single = is_array(reset($data)) ? false : true;
+        $data = $single ? [$data] : $data;
+
+        foreach ($data as &$v)
+        {
+            if(!empty($v['status']))
+            {
+                $v['show_status'] = self::$status[$v['status']];
+            }
+
+            if(!empty($v['login_time']))
+            {
+                $v['show_login_time'] = date('Y-m-d H:i:s', $v['login_time']);
+            }
+        }
+
+        return $single ? reset($data) : $data;
+    }
 }

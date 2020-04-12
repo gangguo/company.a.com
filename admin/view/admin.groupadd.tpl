@@ -19,7 +19,7 @@
                         <div class="form-group">
                             <label class="col-sm-3 control-label">组名称：</label>
                             <div class="col-sm-8">
-                                <input type="text" name="name" class="form-control" value="<{if isset($data)}><{$data.name}><{/if}>" required class="valid">
+                                <input type="text" name="group_name" class="form-control" value="<{if !empty($data.group_name)}><{$data.group_name}><{/if}>" required class="valid">
                             </div>
                         </div>
                         <div class="form-group">
@@ -33,7 +33,7 @@
                         </div>
 
 
-                        
+
                         <div class="form-group">
                             <label class="col-sm-3 control-label">备 注：</label>
                             <div class="col-sm-8">

@@ -14,8 +14,12 @@ use sephp\core\session;
 use sephp\core\config;
 use sephp\core\lib\make_code;
 use sephp\core\lib\verifiy;
+use sephp\core\lib\google_auth;
 use sephp\core\cache;
 use sephp\core\lib\weixin\wechat;
+use admin\model\mod_admin_pam;
+use admin\model\mod_admin;
+use common\model\pub_mod_login_log;
 
 class ctl_public
 {
@@ -142,23 +146,23 @@ class ctl_public
 
             $admin_user = req::$posts['username'];
             $admin_pass = req::$posts['password'];
-            $where = [
-                ['username','=',$admin_user],
-                ['password','=',$admin_pass],
-                ['status','=',1],
-            ];
-            if(power::instance()->login_check([
-                'username' => $admin_user,
-                'password' => $admin_pass
-            ]))
+
+            if(false !== $info = power::instance()->login_check($admin_user, $admin_pass))
             {
                 if(empty(sephp::$_config['web']['google_auth']))
                 {
-                    log::info('用户【ID:' . power::instance()->_uid . '】登陆成功');
-                    power::instance()->add_login_log(['session_id' => session_id()]);
+                    power::instance()->set_info($info);
+                    pub_mod_login_log::add([
+                        'session_id' => session_id(),
+                        'status'     => 1,
+                        'username'   => $admin_user,
+                        'login_type' => 2,
+                        'user_type'  => 'admin',
+                    ]);
+                    log::info('用户【info:' . var_export($info ,1) . '】登陆成功');
                     show_msg::success('登陆成功','?ct=index&ac=index');
                 }
-                elseif(empty(power::instance()->_info['auth_secert']))
+                elseif(empty($info['auth_secert']))
                 {
                     //第一次绑定secert
                     show_msg::redirect('?ct=public&ac=auth_first_username&username=' . $admin_user . '&password=' . $admin_pass);
@@ -169,8 +173,17 @@ class ctl_public
                     show_msg::redirect('?ct=public&ac=verify_google_code&username=' . $admin_user . '&password=' . $admin_pass);
                 }
             }
-            show_msg::error('登陆失败,用户名或密码错误');
-
+            else
+            {
+                 pub_mod_login_log::add([
+                        'status'     => 2,
+                        'username'   => $username,
+                        'login_type' => 2,
+                        'user_type'  => 'admin',
+                        'remark'     => '用户名或者密码错误',
+                ]);
+                show_msg::info('登陆失败,用户名或密码错误');
+            }
         }
 
         if(!empty(sephp::$_config['web']['google_auth']))
@@ -188,13 +201,13 @@ class ctl_public
         {
             view::assign('verify_url','?ct=public&ac=verify&length=7');
         }
+
         view::display('system/login');
     }
 
     //输入google 验证码
     public function verify_goole_code()
     {
-        power::instance()->is_login();
         view::display('system/verify.gogole.code');
     }
 
@@ -203,7 +216,6 @@ class ctl_public
      */
     public function auth_first_username()
     {
-        power::instance()->is_login();
         view::assign('save_url', '?ct=public&ac=auth_finish');
         view::assign('username', req::item('username',''));
         view::assign('password', req::item('password',''));
@@ -215,7 +227,6 @@ class ctl_public
      */
     public function auth_second_install_app()
     {
-        power::instance()->is_login();
         view::display('system/auto_second');
     }
 
@@ -224,7 +235,6 @@ class ctl_public
      */
     public function auth_third_bind_secert()
     {
-        power::instance()->is_login();
         //把本次的"安全密匙SecretKey" 入库,和账户关系绑定,客户端也是绑定这同一个"安全密匙SecretKey"
         $secret = google_auth::instance()->create_secret();
         session::set('googel_auth_secret', $secret);
@@ -232,14 +242,15 @@ class ctl_public
         $qr_code_url = google_auth::instance()->get_qr_code_url(
             req::item('username', ''),
             $secret,
-            config::get('base_config')['web_name']);
+            config::get('base_config')['web_name']
+        );
+
         show_msg::ajax('', 200, ['qr_code_url'=>$qr_code_url]);
         //view::display('system/auto_third');
     }
 
     public function auth_finish()
     {
-        power::instance()->is_login();
         $code = req::item('code','');
         $user = req::item('username', '');
         $pass = req::item('password', '');
@@ -257,13 +268,7 @@ class ctl_public
 
         if(google_auth::instance()->verify_code($code,$secret))
         {
-            db::update(power::$table_admin)
-                ->set(['auth_secert'=>$secret])
-                ->where('admin_id', power::instance()->_info['admin_id'])
-                ->execute();
-
-            power::instance()->login_log();
-
+            mod_admin::save_google_auth_secert($secret);
             show_msg::ajax('绑定成功', 200);
         }
         else
@@ -275,7 +280,6 @@ class ctl_public
     //使用code 直接登陆
     public function verify_google_code()
     {
-        power::instance()->is_login();
         if(!empty(req::$posts))
         {
             $code = req::item('code','');

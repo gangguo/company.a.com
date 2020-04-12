@@ -15,12 +15,12 @@
 
                 </div>
                 <div class="ibox-content">
-                    <form class="form-horizontal m-t validate" method="post" action="<{$_self_url}>" id="signupForm">
+                    <form class="form-horizontal m-t validate" method="post" action="?ct=admin&ac=saveuser" id="signupForm">
                         <input name="admin_id" type="hidden" value="<{if isset($data)}><{$data.admin_id}><{else}>0<{/if}>" />
                         <div class="form-group">
                             <label class="col-sm-3 control-label">登 录 名：</label>
                             <div class="col-sm-8">
-                                <input  name="username" disabled class="form-control" value="<{if isset($data)}><{$data.username}><{/if}>" required class="valid">
+                                <input  name="username" <{if isset($data)}>disabled<{/if}> class="form-control" value="<{if isset($data)}><{$data.username}><{/if}>" required class="valid">
                             </div>
                         </div>
                         <div class="form-group">

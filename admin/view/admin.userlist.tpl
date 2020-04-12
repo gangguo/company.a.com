@@ -42,6 +42,7 @@
                                 <th>真实姓名</th>
                                 <th>状态</th>
                                 <th>备注</th>
+                                <th>添加时间</th>
                                 <th>操作</th>
                             </tr>
 
@@ -53,8 +54,9 @@
                                 <td> <{$data.email}> </td>
                                 <td> <{$data.group_name}> </td>
                                 <td><span class="pie"> <{$data.realname}></span></td>
-                                <td> <{if $data.status == 1}>已启用<{else}>已禁用<{/if}> </td>
-                                <td> <{$data.realname}> </td>
+                                <td> <{$data.show_status}> </td>
+                                <td> <{$data.remark}> </td>
+                                <td> <{$data.show_addtime}> </td>
                                 <td>
                                     <a class="btn btn-xs btn-warning" href="<{$save_url}>&admin_id=<{$data.admin_id}>&auth_secert=">重置Google密钥</a>
                                         <{if $data.status == 1}>

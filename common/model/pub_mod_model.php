@@ -51,6 +51,11 @@ class pub_mod_model
      */
     public static $error_msg = null;
 
+     /**
+     * @var null 错误代码
+     */
+    public static $error_code = 0;
+
     /**
      * @var array 字段验证规则
      */
@@ -148,7 +153,12 @@ class pub_mod_model
 
         if($data_filter['total'])
         {
-            $query->offset($pages['offset'])->limit($data_filter['limit']);
+            $query->offset($pages['offset']);
+        }
+
+        if(!empty($data_filter['limit']))
+        {
+            $query->limit($data_filter['limit']);
         }
 
         $data = $query->execute();
@@ -180,7 +190,7 @@ class pub_mod_model
      */
     public static function getdump($conds = [])
     {
-        foreach (['where', 'fields', 'join', 'order_by'] as $f)
+        foreach (['where', 'field', 'joins', 'order_by'] as $f)
         {
             $$f = empty($conds[$f]) ? [] : $conds[$f];
         }
@@ -199,7 +209,7 @@ class pub_mod_model
 
         $query  = db::select($field)->from(static::$table);
 
-        static::_complate_sql($query, $where, $join, $order_by);
+        static::_complate_sql($query, $where, $joins, $order_by);
 
         $data = $query->as_row()->execute();
 
@@ -325,7 +335,15 @@ class pub_mod_model
         return $query->execute();
     }
 
-    public static function delete(array $where, $table = '')
+    /**
+     * 删除操作
+     * @Author   GangKui
+     * @DateTime 2020-04-11
+     * @param    [type]     $where [description]
+     * @param    string     $table [description]
+     * @return   [type]            [description]
+     */
+    public static function delete($where, $table = '')
     {
         if( empty($where) ) return false;
 
@@ -333,7 +351,9 @@ class pub_mod_model
 
         $query = db::delete($table);
 
-        static::_complate_sql($query, $where);
+        $wh = is_array($where) ? $where : [static::$pk => $where];
+
+        static::_complate_sql($query, $wh);
 
         return $query->execute();
     }

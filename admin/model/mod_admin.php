@@ -21,27 +21,13 @@ class mod_admin extends pub_mod_model
     public static
         $table        = '#PB#_admin',
         $pk           = 'admin_id',
-        $fields       = [
-                'admin_id'      => ['type' => 'int','required' => true, 'comment' => '管理员ID'],
-	            'group_id'  	=> ['type' => 'text', 'required' => true, 'comment' => '组ID'],
-	            'username'      => ['type' => 'text', 'default' => 0, 'comment' => '登陆名'],
-	            'password'      => ['type' => 'text', 'default' => null, 'comment' => '登陆密码'],
-	            'sex'         => ['type' => 'text', 'default' => 0, 'comment' => '性别'],
-	            'email'          => ['type' => 'text', 'default' => 0, 'comment' => '邮箱'],
-	            'realname'        => ['type' => 'text', 'default' => 0, 'comment' => '真实姓名'],
-	            'nickname'         => ['type' => 'text', 'default' => null, 'comment' => '昵称'],
-	            'mobile'      => ['type' => 'text', 'default' => null, 'comment' => '手机'],
-	            'remark'     => ['type' => 'text', 'default' => null, 'comment' => '备注'],
-	            'auth_secert'       => ['type' => 'text', 'default' => null, 'comment' => 'google身份验证的密钥'],
-	            'session_id'        => ['type' => 'text', 'default' => null, 'comment' => '会话ID'],
-	            'reg_ip'         => ['type' => 'text', 'default' => null, 'comment' => '注册ip'],
-	            'status'        => ['type' => 'text', 'default' => null, 'comment' => '状态'],
-	            'addtime'       => ['type' => 'int', 'required' => false, 'default' => 0, 'comment' => '添加时间'],
-	            'uptime'        => ['type' => 'int', 'default' => 0, 'comment' => '更新时间'],
-	            'deltime'       => ['type' => 'int', 'default' => 0, 'comment' => '删除时间'],
+        $field       = [
+                'admin_id', 'group_id', 'sex', 'email','realname', 'nickname', 'mobile',
+                'remark', 'auth_secert', 'session_id', 'reg_ip', 'status',
+                'addtime', 'uptime', 'deltime'
             ],
         $status = [
-            '1' => '正常',
+            '1' => '启用',
             '2' => '禁用',
         ],
         $sex = [
@@ -50,34 +36,18 @@ class mod_admin extends pub_mod_model
         ];
 
     /**
-     * 登陆
+     * 绑定Google迷药
      * @Author   GangKui
-     * @DateTime 2020-03-30
-     * @return   [type]     [description]
+     * @DateTime 2020-04-12
+     * @param    [type]     $google_auth_secert [description]
+     * @return   [type]                         [description]
      */
-    public static function login()
+    public static function save_google_auth_secert($google_auth_secert)
     {
-
-    }
-
-    public static function get_available_list()
-    {
-        return self::getlist([
-            'field' => ['admin_id', 'username', 'nickname'],
-            'where' => [
-                ['status', '=', '1'],
-                ['deltime', '=', '0'],
-            ]
-        ]);
-    }
-
-    public static function getdatabyid($admin_id)
-    {
-        $data = self::getdump([
-            'where'    => [self::$pk => $admin_id]
-        ]);
-
-        return self::data_format($data);
+        return self::update(
+            ['auth_secert' => $google_auth_secert, 'uptime' => TIME_SEPHP],
+            [self::$pk => sephp::$_uid]
+        );
     }
 
     /**
@@ -87,25 +57,31 @@ class mod_admin extends pub_mod_model
      * @param    [type]     $data [description]
      * @return   [type]           [description]
      */
-    public static function data_format($data = [])
+    public static function data_format($data)
     {
-        if(empty($data)) return $data;
+        $single = is_array(reset($data)) ? false : true;
+        $data = $single ? [$data] : $data;
 
-        if(isset($data['sex']))
+        foreach ($data as &$v)
         {
-            $data['show_sex'] = self::$sex[$data['sex']];
+            if(isset($data['sex']))
+            {
+                $v['show_sex'] = self::$sex[$v['sex']];
+            }
+
+            if(!empty($v['status']))
+            {
+                $v['show_status'] = self::$status[$v['status']];
+            }
+
+            if(!empty($v['addtime']))
+            {
+                $v['show_addtime'] = date('Y-m-d H:i:s', $v['addtime']);
+            }
+
         }
 
-        if(isset($data['status']))
-        {
-            $data['status'] = self::$status[$data['status']];
-        }
 
-        if(isset($data['group_id']))
-        {
-            //$data['group_name'] = self::$status[$data['status']];
-        }
-
-        return $data;
+        return $single ? reset($data) : $data;
     }
 }

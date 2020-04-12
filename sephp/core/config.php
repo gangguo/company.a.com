@@ -215,4 +215,97 @@ class config
             self::$config[$range] = [];
         }
     }
+
+    /**
+     * 获取菜单数据
+     * @param string $type
+     * @return array
+     */
+    public static function get_menus($type = 'left_menu', $file = '')
+    {
+        $file = empty($file) ?  PATH_ROOT . 'admin/config/menu.xml' : $file;
+
+        //禁止引用外部xml实体
+        libxml_disable_entity_loader(true);
+        $xml   = file_get_contents($file);
+        $array = json_decode(json_encode(simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA)), true);
+
+        $data = [];
+
+        foreach ($array['menu'] as $key => $val)
+        {
+            if ($type != 'all' && isset($val['@attributes']['display']) && $val['@attributes']['display'] == 'none')
+            {
+                continue;
+            }
+
+            if ($type != 'left_menu')
+            {
+                $data[$key] = [
+                    'title'  => $val['@attributes']['name'],
+                    'icon'   => $val['@attributes']['icon'],
+                    'id'     => empty($val['@attributes']['id'])?'':$val['@attributes']['id'],
+                    'spread' => empty($v['@attributes']['spread'])?false:$v['@attributes']['spread']
+                ];
+
+                if ($type != 'all')
+                {
+                    continue;
+                }
+            }
+
+            if (isset($val['menu']))
+            {
+                $m = self::get_data_menu($val['menu'], $type);
+                if (empty($m))
+                {
+                    continue;
+                }
+                if ($type == 'all')
+                {
+                    $data[$key]['menu'] = $m;
+                }
+                elseif (!empty($val['@attributes']['id']))
+                {
+                    $data[$val['@attributes']['id']] = $m;
+                }
+            }
+
+        }
+
+        return $data;
+
+    }
+
+    public static function get_data_menu($val, $type)
+    {
+        foreach ($val as $k => $v)
+        {
+            if ($type != 'all' && isset($v['@attributes']['display']) && $v['@attributes']['display'] == 'none') {
+                continue;
+            }
+
+            $data[$k] = [
+                'title' => isset($v['@attributes']['name'])?$v['@attributes']['name']:
+                (isset($v['name'])?$v['name']:show_msg::error('菜单配置错误')),
+                'icon' => isset($v['@attributes']['icon'])?$v['@attributes']['icon']:
+                (isset($v['icon'])?$v['icon']:''),
+                'href' => isset($v['@attributes']['ac'])?'?ct='.$v['@attributes']['ct'].'&ac='.$v['@attributes']['ac']:
+                (isset($v['ac'])?'?ct='.$v['ct'].'&ac='.$v['ac']:''),
+                'data-id' => isset($v['@attributes']['ac'])?$v['@attributes']['ct'].'_'.$v['@attributes']['ac']:
+                (isset($v['ct'])?$v['ct'].'_'.$v['ac']:''),
+                'spread' => isset($v['@attributes']['spread'])?$v['@attributes']['spread']:false,
+            ];
+
+            $data[$k]['id'] = isset($v['@attributes']['id'])?$v['@attributes']['name']:
+            (isset($v['id'])?$v['id']:$data[$k]['title']);
+
+            if (isset($v['menu']))
+            {
+                $data[$k]['menu'] = self::get_data_menu($v['menu'], $type);
+            }
+        }
+
+        return $data;
+    }
 }

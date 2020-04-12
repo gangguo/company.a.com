@@ -30,7 +30,8 @@ class google_auth
         $validChars = $this->_getBase32LookupTable();
 
         // Valid secret lengths are 80 to 640 bits
-        if ($secretLength < 16 || $secretLength > 128) {
+        if ($secretLength < 16 || $secretLength > 128)
+        {
             throw new \Exception('Bad secret length');
         }
         $secret = '';
@@ -45,11 +46,15 @@ class google_auth
                 $rnd = false;
             }
         }
-        if ($rnd !== false) {
-            for ($i = 0; $i < $secretLength; ++$i) {
+        if ($rnd !== false)
+        {
+            for ($i = 0; $i < $secretLength; ++$i)
+            {
                 $secret .= $validChars[ord($rnd[$i]) & 31];
             }
-        } else {
+        }
+        else
+        {
             throw new \Exception('No source of secure random');
         }
 
@@ -109,7 +114,8 @@ class google_auth
         $level = !empty($params['level']) && array_search($params['level'], array('L', 'M', 'Q', 'H')) !== false ? $params['level'] : 'M';
 
         $urlencoded = urlencode('otpauth://totp/'.$name.'?secret='.$secret.'');
-        if (isset($title)) {
+        if (isset($title))
+        {
             $urlencoded .= urlencode('&issuer='.urlencode($title));
         }
 

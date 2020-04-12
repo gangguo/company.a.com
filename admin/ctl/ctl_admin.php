@@ -7,6 +7,7 @@ use sephp\core\log;
 use sephp\core\db;
 use sephp\core\view;
 use sephp\core\lib\power;
+use sephp\core\lib\google_auth;
 use sephp\core\lib\pages;
 use sephp\core\show_msg;
 use sephp\core\session;
@@ -14,19 +15,15 @@ use sephp\core\config;
 use admin\model\mod_system;
 use admin\model\mod_admin_group;
 use admin\model\mod_admin;
+use admin\model\mod_admin_pam;
+use common\model\pub_mod_login_log;
+
 
 
 class ctl_admin
 {
-	private
-        $_admin_table = '#PB#_admin',
-    	$_admin_id    = 'admin_id',
-    	$_group_table = '#PB#_admin_group',
-    	$_group_id    = 'group_id',
-    	$_log_table   = '#PB#_admin_login',
-        $table_pam   = '#PB#_admin_pam';
-
-	public function __construct() {
+	public function __construct()
+    {
 		view::assign('back_url', req::cookie('back_url', 'javascript:history.go(-1);'));
 	}
 
@@ -38,7 +35,16 @@ class ctl_admin
      */
     public function profile()
     {
+        $list = pub_mod_login_log::getlist([
+            'where' => [
+                'username' => sephp::$_user['username'],
+            ],
+            'limit' => 13,
+        ]);
 
+        view::assign('list', $list);
+        view::assign('user_info', sephp::$_user);
+        view::display('system/profile');
     }
 
     /**
@@ -59,44 +65,41 @@ class ctl_admin
      * @DateTime 2019-10-11
      * @return   [type]     [description]
      */
-	public function userlist() {
-		$where    = [];
+	public function userlist()
+    {
+		$where[]  = [mod_admin::$table.'.deltime', '=', 0];
 		$keywords = req::item('keywords', '');
 		view::assign('keywords', $keywords);
-		if (!empty($keywords)) {
-			$where[] = [$this->_table_pam . '.username', 'like', "%{$keywords}%"];
+		if (!empty($keywords))
+        {
+			$where[] = [mod_admin_pam::$table . '.username', 'like', "{$keywords}%"];
 		}
+
 		$status = req::item('status', 0);
 		view::assign('status', $status);
-		if (!empty($status)) {
-			$where[] = ['status', '=', $status];
-		}
-		$query = db::select('COUNT(admin_id) as count')
-			->from($this->_admin_table);
-		if ($where) {
-			$query->where($where);
-		}
-
-		$count = $query->join($this->_group_table, 'left')
-			->on($this->_group_table.'.group_id', '=', $this->_admin_table.'.group_id')
-		                                                 ->as_row()->execute();
-
-		$pages = pages::instance($count['count'], req::item('page_num', 10));
-
-		$query = db::select($this->_admin_table.'.*,'.$this->_group_table.'.*,'.$this->_table_pam.'.username')
-			->from($this->_admin_table);
-		if ($where)
+		if (!empty($status))
         {
-			$query->where($where);
+			$where[] = [mod_admin::$table.'.status', '=', $status];
 		}
-		$data = $query->join($this->_group_table, 'left')
-            ->on($this->_group_table.'.group_id', '=', $this->_admin_table.'.group_id')
-            ->join($this->_table_pam, 'left')
-            ->on($this->_table_pam.'.'.$this->_admin_id, '=', $this->_admin_table.'.'.$this->_admin_id)
-            ->offset($pages['offset'])
-			->limit($pages['limit'])
-			->order_by($this->_admin_id, 'desc')
-			->execute();
+
+		$list = mod_admin::getlist([
+            'field' => [mod_admin::$table.'.*', mod_admin_pam::$table.'.username', mod_admin_group::$table.'.group_name'],
+            'where' => $where,
+            'joins' => [
+                [
+                    'table' => mod_admin_pam::$table,
+                    'type'  => 'left',
+                    'where' => [mod_admin_pam::$table.'.admin_id', '=', mod_admin::$table . '.admin_id']
+                ],
+                [
+                    'table' => mod_admin_group::$table,
+                    'type'  => 'left',
+                    'where' => [mod_admin_group::$table.'.group_id', '=', mod_admin::$table . '.group_id']
+                ]
+            ],
+            'limit' => req::item('page_num', 13),
+            'total' => true,
+        ]);
 
 		setcookie('userlist_url', func::get_cururl());
 
@@ -105,90 +108,106 @@ class ctl_admin
 		view::assign('add_url', '?ct=admin&ac=adduser');
 		view::assign('edit_url', '?ct=admin&ac=adduser');
 		view::assign('save_url', '?ct=admin&ac=saveuser');
-		view::assign('list', $data);
-		view::assign('pages', $pages['show']);
+        view::assign('list', $list['data']);
+        view::assign('pages', $list['pages']);
 		view::display('admin.userlist');
 	}
 
+    /**
+     * 添加。编辑用户
+     * @Author   GangKui
+     * @DateTime 2020-04-11
+     * @return   [type]     [description]
+     */
 	public function adduser()
     {
-		if (empty(req::$posts))
+		if (!empty(req::item('admin_id', '')))
         {
-			if (!empty(req::item('admin_id', '')))
-            {
-				$data = db::select()
-					->from($this->_admin_table)
-                    ->join($this->_table_pam, 'left')
-                    ->on($this->_table_pam.'.'.$this->_admin_id, '=', $this->_admin_table.'.'.$this->_admin_id)
-                    ->where($this->_admin_table .'.'. $this->_admin_id, req::$forms[$this->_admin_id])
-				    ->as_row()
-				    ->execute();
-				view::assign('data', $data);
-			}
-
-			$groups = db::select()->from($this->_group_table)->where('status', '1')->execute();
-			view::assign('groups', $groups);
-			view::assign('add_save_url', '?ct='.CONTROLLER_NAME.'&ac=saveuser');
-			view::display('admin.adduser');
-			exit;
+            $data = mod_admin::getdump([
+                'where' => [mod_admin::$table . '.' . mod_admin::$pk => req::item(mod_admin::$pk)],
+                'joins' => [
+                    [
+                        'table' => mod_admin_pam::$table,
+                        'type'  => 'left',
+                        'where' => [mod_admin_pam::$table.'.admin_id', '=', mod_admin::$table . '.admin_id']
+                    ],
+                    [
+                        'table' => mod_admin_group::$table,
+                        'type'  => 'left',
+                        'where' => [mod_admin_group::$table.'.group_id', '=', mod_admin::$table . '.group_id']
+                    ]
+                ],
+            ]);
+			view::assign('data', $data);
 		}
 
-        $data['realname'] = req::$posts['realname'];
-        $data['nickname'] = req::$posts['nickname'];
-		$data['email']    = req::$posts['email'];
-		$data['group_id'] = req::$posts['group_id'];
-		$data['remark']   = req::$posts['remark'];
-
-		if (req::$posts[$this->_admin_id])
-        {
-			if (!empty(req::$posts['password']))
-            {
-				$pam['password'] = power::make_password(req::$posts['password']);
-                if(false === db::update($this->_table_pam)
-                            ->set($pam)
-                            ->where($this->_admin_id, req::$posts[$this->_admin_id])
-                            ->execute())
-                {
-                    show_msg::error('编辑失败');
-                }
-			}
-
-			if (db::update($this->_admin_table)
-				->set($data)
-					->where($this->_admin_id, req::$posts[$this->_admin_id])
-				->execute() === false)
-            {
-				show_msg::error('编辑失败');
-			} else {
-				show_msg::success('编辑成功');
-			}
-		}
-
-		$data['password']    = power::make_password(req::$posts['password']);
-		$data['create_time'] = time();
-		if (db::insert($this->_admin_table)->set($data)->execute() > 0) {
-			show_msg::success('新增成功', '?ct='.CONTROLLER_NAME.'&ac=userlist');
-		}
-		show_msg::error();
+		$groups = db::select()->from(mod_admin_group::$table)->where('status', '1')->execute();
+		view::assign('groups', $groups);
+		view::assign('add_save_url', '?ct='.CONTROLLER_NAME.'&ac=saveuser');
+		view::display('admin.adduser');
 	}
 
-	public function saveuser() {
-		if (req::$forms[$this->_admin_id] > 0) {
-			$status      = req::item('status', null);
-			$auth_secert = req::item('auth_secert', '');
-			$data        = !empty($status)?['status' => $status]:['auth_secert' => $auth_secert];
-			$result      = db::update($this->_admin_table)
-			                          ->set($data)
-			                          ->where($this->_admin_id, req::$forms[$this->_admin_id])
-			->execute();
-		} else {
-			list($result, $rows) = db::insert($this->_admin_table)
-			                                       ->set(req::$forms)
-			                                       ->execute();
+    /**
+     * 用户信息保存
+     * @Author   GangKui
+     * @DateTime 2020-04-11
+     * @return   [type]     [description]
+     */
+	public function saveuser()
+    {
+        $data = [];
+        foreach (mod_admin::$field as $f)
+        {
+            if(isset(req::$forms[$f]))
+            {
+                $data[$f] = req::$forms[$f];
+            }
+        }
+
+        $data['uptime']  = TIME_SEPHP;
+		if (req::$forms[mod_admin::$pk] > 0)
+        {
+            //跟新密码
+            if (!empty(req::$posts['password']))
+            {
+                $pam['password'] = power::make_password(req::$posts['password']);
+                if(false === mod_admin_pam::update($pam,[mod_admin::$pk => req::$posts[mod_admin::$pk]]))
+                {
+                    show_msg::error();
+                }
+            }
+
+            if(!empty($data))
+            {
+               if (false === mod_admin::update($data, [mod_admin::$pk => req::$posts[mod_admin::$pk]]))
+                {
+                    show_msg::error();
+                }
+            }
 		}
-		if ($result !== false) {
-			show_msg::success('', req::cookie('userlist_url', '?ct=admin&ac=userlist'));
+        else
+        {
+            $data['addtime'] = TIME_SEPHP;
+            if (false === list($admin_id,) = mod_admin::insert($data))
+            {
+                show_msg::error();
+            }
+
+            //跟新密码
+            if (!empty(req::$posts['password']))
+            {
+                $pam['admin_id'] = $admin_id;
+                $pam['username'] = req::$posts['username'];
+                $pam['password'] = power::make_password(req::$posts['password']);
+                if(false === mod_admin_pam::insert($pam))
+                {
+                    show_msg::error();
+                }
+            }
+
 		}
+
+        show_msg::success('', '?ct=admin&ac=userlist');
 
 	}
 
@@ -196,66 +215,102 @@ class ctl_admin
 
 	}
 
-	public function grouplist() {
-		$where    = [];
+	/**
+     * 用户组列表
+     * @Author   GangKui
+     * @DateTime 2020-04-11
+     * @return   [type]     [description]
+     */
+    public function grouplist()
+    {
+		$where[]  = ['deltime','=', 0];
+
 		$keywords = req::item('keywords', '');
 		view::assign('keywords', $keywords);
-		if (!empty($keywords)) {
+		if (!empty($keywords))
+        {
 			$where[] = ['name', 'like', "%{$keywords}%"];
 		}
+
 		$status = req::item('status', 0);
 		view::assign('status', $status);
-		if (!empty($status)) {
+        if (!empty($status))
+        {
 			$where[] = ['status', '=', $status];
 		}
 
-		$query = db::select()
-			->from($this->_group_table);
-		if ($where) {
-			$query->where($where);
-		}
-		$list = $query->execute();
+        $list = mod_admin_group::getlist([
+            'where' => $where,
+        ]);
 
 		view::assign('list', $list);
 
 		view::assign('add_url', '?ct=admin&ac=groupadd');
-		view::assign('edit_url', '?ct=admin&ac=groupadd');
+        view::assign('edit_url', '?ct=admin&ac=groupadd');
+        view::assign('del_url', '?ct=admin&ac=groupdel');
 		view::assign('power_edit_url', '?ct=admin&ac=groupedit_power');
 		view::display();
 	}
 
-	public function groupadd() {
-		if (empty(req::$posts)) {
-			if (!empty(req::$gets[$this->_group_id])) {
-				$data = db::select()
-					->from($this->_group_table)
-					->where($this->_group_id, req::$gets[$this->_group_id])
-				                                           ->as_row()
-				                                           ->execute();
+    /**
+     * 删除用户组
+     * @Author   GangKui
+     * @DateTime 2020-04-11
+     * @return   [type]     [description]
+     */
+    public function groupdel()
+    {
+        $data['deltime'] = TIME_SEPHP;
+        $data['deluser'] = sephp::$_uid;
+        if(false === mod_admin_group::update($data, [mod_admin_group::$pk => req::item(mod_admin_group::$pk)]))
+        {
+            show_msg::error('保存失败');
+        }
+
+       show_msg::success('', '?ct=admin&ac=grouplist');
+    }
+
+    /**
+     *  添加组，编辑组
+     * @Author   GangKui
+     * @DateTime 2020-04-11
+     * @return   [type]     [description]
+     */
+	public function groupadd()
+    {
+		if (empty(req::$posts))
+        {
+			if (!empty(req::$gets[$this->_group_id]))
+             {
+				$data = mod_admin_group::getdump([
+                    'where' => [mod_admin_group::$pk => req::item(mod_admin_group::$pk)],
+                ]);
 				view::assign('data', $data);
 			}
 			view::display();
-			exit;
+			exit();
 		}
 
-		$data['name']   = req::item('name', '');
+		$data['group_name']   = req::item('group_name', '');
 		$data['remark'] = req::item('remark', '');
 		$data['status'] = req::item('status', 1);
-		if (req::$posts[$this->_group_id]) {
-			if (db::update($this->_group_table)->set($data)->where($this->_group_id, req::$posts[$this->_group_id])->execute() === false) {
-				show_msg::error();
-			} else {
-				show_msg::success();
-			}
+		if (!empty(req::$posts[mod_admin_group::$pk]))
+        {
+			if(false === mod_admin_group::update($data, [mod_admin_group::$pk => req::$posts[mod_admin_group::$pk]]))
+            {
+                show_msg::error('保存失败');
+            }
 		}
-
-		$data['create_time']   = time();
-		$data['create_user']   = 1;
-		list($insert_id, $row) = db::insert($this->_group_table)->set($data)->execute();
-		if ($insert_id > 0) {
-			show_msg::success('', '?ct=admin&ac=grouplist');
-		}
-		show_msg::error();
+        else
+        {
+            $data['create_time']   = time();
+            $data['create_user']   = 1;
+            if(false === mod_admin_group::insert($data))
+            {
+                show_msg::error('保存失败');
+            }
+        }
+	   show_msg::success('', '?ct=admin&ac=grouplist');
 	}
 
 	//用户组权限编辑
@@ -263,9 +318,8 @@ class ctl_admin
 	{
 		if (empty(req::$posts))
 		{
-			$data = mod_admin_group::getdatabyid(req::$gets[$this->_group_id]);
-			$powers = mod_system::get_menus('all');
-
+			$data = mod_admin_group::getdump([mod_admin_group::$pk => req::item(mod_admin_group::$pk)]);
+			$powers = config::get_menus('all');
 			view::assign('powers', $powers);
 			view::assign('data', $data);
 			view::display('admin.power');
@@ -279,7 +333,7 @@ class ctl_admin
 			$data['powerlist'] = json_encode($data['powerlist'], JSON_UNESCAPED_UNICODE);
 		}
 
-		if (db::update($this->_group_table)
+		if (db::update(mod_admin_group::$table)
 			->set($data)
 				->where($this->_group_id, req::$posts[$this->_group_id])
 			->execute() === false)
@@ -292,11 +346,11 @@ class ctl_admin
 
 	//个人资料，个人中心
 	public function user_info() {
-		$info = db::select($this->_admin_table.'.*,'.$this->_group_table.'.*')
-			->from($this->_admin_table)
-			->join($this->_group_table, 'left')
-			->on($this->_group_table.'.group_id', '=', $this->_admin_table.'.group_id')
-		                                                 ->where($this->_admin_id, power::instance()->_uid)
+		$info = db::select(mod_admin::$table.'.*,'.mod_admin_group::$table.'.*')
+			->from(mod_admin::$table)
+			->join(mod_admin_group::$table, 'left')
+			->on(mod_admin_group::$table.'.group_id', '=', mod_admin::$table.'.group_id')
+		                                                 ->where(mod_admin::$pk, power::instance()->_uid)
 		->as_row()->execute();
 
 		p(session::get(power::$_mark));
@@ -305,76 +359,87 @@ class ctl_admin
 		view::display('admin.user_info');
 	}
 
-	//登陆日志
-	public function loginlog() {
+	/**
+     * 登陆日志
+     * @Author   GangKui
+     * @DateTime 2020-04-11
+     * @return   [type]     [description]
+     */
+	public function loginlog()
+    {
 		$where    = [];
 		$keywords = req::item('keywords', '');
 		view::assign('keywords', $keywords);
-		if (!empty($keywords)) {
+		if (!empty($keywords))
+        {
 			$where[] = ['username', 'like', "{$keywords}%"];
 		}
+
 		$status = req::item('status', 0);
 		view::assign('status', $status);
 		if (!empty($status)) {
 			$where[] = ['status', '=', $status];
 		}
 
-		$query = db::select('COUNT(*) as count')
-			->from($this->_log_table);
-		if (!empty($where)) {
-			$query->where($where);
-		}
-		$count = $query->as_field()->execute();
 
-		$pages = pages::instance($count['count'], req::item('page_num', 1));
+        $list = pub_mod_login_log::getlist([
+            'where' => $where,
+            'limit' => req::item('page_num', 13),
+            'total' => true,
+        ]);
 
-		$data = db::select()->from($this->_log_table);
-		if (!empty($where)) {
-			$data = $data->where($where);
-		}
-		$data = $data->offset($pages['offset'])
-			->limit($pages['limit'])
-			->execute();
-		view::assign('pages', $pages['show']);
-		view::assign('list', $data);
+        view::assign('del_url', '?ct=admin&ac=del_login_log&id=');
+        view::assign('list', $list['data']);
+        view::assign('pages', $list['pages']);
 		view::display('system/loginlog');
 	}
 
-	//在线会话
+    /**
+     * 删除登陆日志
+     * @Author   GangKui
+     * @DateTime 2020-04-11
+     * @return   [type]     [description]
+     */
+    public function del_login_log()
+    {
+        if(false === pub_mod_login_log::delete(req::item(pub_mod_login_log::$pk)))
+        {
+            show_msg::error();
+        }
+        show_msg::success();
+    }
+
+	/**
+     * 在线用户
+     * @Author   GangKui
+     * @DateTime 2020-04-11
+     * @return   [type]     [description]
+     */
 	public function online()
 	{
 		$where    = [];
 		$keywords = req::item('keywords', '');
 		view::assign('keywords', $keywords);
-		if (!empty($keywords)) {
+
+        if (!empty($keywords))
+        {
 			$where[] = ['username', 'like', "{$keywords}%"];
 		}
+
 		$status = req::item('status', 0);
 		view::assign('status', $status);
 		if (!empty($status)) {
 			$where[] = ['status', '=', $status];
 		}
 
-		$query = db::select('COUNT(*) as count')
-			->from($this->_log_table);
-		if (!empty($where))
-		{
-			$query->where($where);
-		}
-		$count = $query->as_field()->execute();
+		$list = pub_mod_login_log::getlist([
+            'where' => $where,
+            'limit' => req::item('page_num', 13),
+            'total' => true,
+        ]);
 
-		$pages = pages::instance($count, req::item('page_num', 20));
-
-		$data = db::select()->from($this->_log_table);
-		if (!empty($where)) {
-			$data = $data->where($where);
-		}
-		$data = $data->offset($pages['offset'])
-			->limit($pages['limit'])
-			->execute();
-
-		view::assign('pages', $pages['show']);
-		view::assign('list', $data);
+        view::assign('list', $list['data']);
+        view::assign('pages', $list['pages']);
 		view::display('system/online');
 	}
 
