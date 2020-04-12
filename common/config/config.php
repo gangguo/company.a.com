@@ -26,7 +26,7 @@ $config['log'] = [
 
 //session 设置
 $config['session'] = [
-	'prefix'      => 'video.a.com_',
+	'prefix'      => 'company_',
 	'auto_start'  => true,
 	'path'        => '',
 	'expire'      => 14400,
@@ -37,14 +37,14 @@ $config['session'] = [
 //可以做读写分离的设置
 $config['mysql'] = [
 	'type'   => 'mysql',
-	'host'   => [
+    'host'   => [
         'master' => '127.0.0.1:3306',
         //'slave'  => ['127.0.0.1:3306'],
     ],
-	'user'   => 'root',
-	'pass'   => 'admin999',
-	'dbname' => 'video.a.com',
-	'prefix' => 'vd',
+    'user'   => 'root',
+    'pass'   => 'admin999',
+    'dbname' => 'company',
+    'prefix' => 'vd',
 ];
 
 $config['cache'] = [

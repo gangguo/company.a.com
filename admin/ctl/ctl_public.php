@@ -177,12 +177,12 @@ class ctl_public
             {
                  pub_mod_login_log::add([
                         'status'     => 2,
-                        'username'   => $username,
+                        'username'   => $admin_user,
                         'login_type' => 2,
                         'user_type'  => 'admin',
                         'remark'     => '用户名或者密码错误',
                 ]);
-                show_msg::info('登陆失败,用户名或密码错误');
+                show_msg::error('登陆失败,用户名或密码错误');
             }
         }
 
