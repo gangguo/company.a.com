@@ -31,6 +31,74 @@ class pub_mod_message extends pub_mod_model
         ];
 
 
+    /**
+     * 添加留言
+     * @Author   GangKui
+     * @DateTime 2020-04-13
+     * @param    [type]     $data [description]
+     */
+    public static function add_message(array $data)
+    {
+        $result = 0;
+        do{
+            $data_filter = func::data_filter([
+                'username' => ['type' => 'text' , 'required' => true],
+                'mobile' => ['type' => 'text' , 'required' => true],
+                'text' => ['type' => 'text' , 'required' => true],
+            ], $data);
+
+            if(!is_array($data_filter))
+            {
+                self::$error_msg = '请填写完整';
+                $result = -1;
+                break;
+            }
+
+            $data_filter['addtime'] = TIME_SEPHP;
+            $data_filter['uptime']  = TIME_SEPHP;
+            $data_filter['ip']      = func::get_client_ip();
+
+            if(
+                3 < self::count([
+                    ['username' ,'=', $data_filter['username']],
+                    ['mobile' ,'=', $data_filter['mobile']],
+                    ['addtime', '>', strtotime(date('Y-m-d'))]
+                ])
+            )
+            {
+                self::$error_msg = '同一个人每天提交不能超过3次';
+                $result = -2;
+                break;
+            }
+
+            if(
+                20 < self::count([
+                    ['ip' ,'=', $data_filter['ip']],
+                    ['addtime', '>', strtotime(date('Y-m-d'))]
+                ])
+            )
+            {
+                self::$error_msg = '同一个IP每天提交不能超过20次';
+                $result = -5;
+                break;
+            }
+
+            $data_filter['addtime'] = TIME_SEPHP;
+            $data_filter['uptime']  = TIME_SEPHP;
+            $data_filter['ip']      = func::get_client_ip();
+
+            if(false  === self::insert($data_filter))
+            {
+                self::$error_msg = '提交失败';
+                $result = -20;
+                break;
+            }
+
+        }while(false);
+
+        return $result;
+    }
+
 
     public static function data_format($data)
     {

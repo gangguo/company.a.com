@@ -2,11 +2,10 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>EZ</title>
-    <meta name="keywords" content="EZ" />
+    <title>管理后台</title>
+    <meta name="keywords" content="管理后台" />
     <base target="_self" />
-    <meta name="description" content="EZ" />
-    <link rel="shortcut icon" href="/favicon.ico" />
+    <meta name="description" content="管理后台" />
     <link href="static/frame/css/bootstrap.min.css?v=3.3.5" rel="stylesheet">
     <link href="static/frame/css/font-awesome.min.css" rel="stylesheet">
 

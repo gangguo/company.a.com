@@ -15,7 +15,7 @@
     <meta http-equiv="refresh" content="0;ie.html" />
     <![endif]-->
 
-    <link rel="shortcut icon" href="favicon.ico"> <link href="css/bootstrap.min.css?v=3.3.5" rel="stylesheet">
+    <link href="css/bootstrap.min.css?v=3.3.5" rel="stylesheet">
     <link href="static/frame/css/font-awesome.min.css?v=4.4.0" rel="stylesheet">
 
     <link href="static/frame/css/animate.min.css" rel="stylesheet">

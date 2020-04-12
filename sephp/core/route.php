@@ -21,12 +21,51 @@ class route
         {
             return false;
         }
+
         if(empty(self::$instance))
         {
             self::$instance = new self();
         }
 
         self::$instance->start();
+    }
+
+    /**
+     * 生产URL
+     * @Author   GangKui
+     * @DateTime 2020-04-12
+     * @param    [type]     $ct    [description]
+     * @param    [type]     $ac    [description]
+     * @param    array      $param [description]
+     * @return   [type]            [description]
+     */
+    public static function create_url($ct, $ac, $param = [])
+    {
+        $url = "?ct={$ct}&ac={$ac}";
+        do{
+            self::$config = sephp::$_config['route'];
+
+            if(!empty($param))
+            {
+                array_walk($param, function($v,$k)use(&$url){
+                    $url .= "&{$k}={$v}";
+                });
+            }
+
+            foreach (self::$config['url_route_rules'] as $rk => $rv)
+            {
+                if($rv === $url)
+                {
+                    $url = $rk.'html';
+                    break;
+                }
+            }
+
+
+
+        }while(false);
+
+        return $url;
     }
 
     /**

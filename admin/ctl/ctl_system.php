@@ -43,6 +43,40 @@ class ctl_system
     }
 
     /**
+     * 模版设置
+     * @Author   GangKui
+     * @DateTime 2020-04-12
+     * @return   [type]     [description]
+     */
+    public function template()
+    {
+        if(!empty(req::$posts['template']))
+        {
+            config::set('template', req::$posts['template']);
+        }
+
+        $list = [];
+        $path = PATH_ROOT . 'index/static/';
+        $handle = opendir($path);
+        while (($file = readdir($handle)) !== false)
+        {
+            if(in_array($file, ['.', '..', '.DS_Store'])) continue;
+            if(is_dir($path . $file))
+            {
+                $list[$file] = [
+                    'title'     => $file,
+                    'cover_img' =>  '/index/static/'. $file . '/cover_img.png',
+                ];
+            }
+        }
+
+        view::assign('template', config::get('template', 'mysql'));
+        view::assign('list', $list);
+        view::assign('add_url', '');
+        view::display('system/template');
+    }
+
+    /**
      * 资源管理
      */
     public function file_manager()

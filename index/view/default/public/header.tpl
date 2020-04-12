@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <!-- OrcasThemes Muvee Reviews - Video Magazine Bootstrap HTML5 template Framework 1.0         <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Muvee Reviews - Video Magazine Bootstrap HTML5 template Framework 1.0"><meta name="author" content="OrcasThemes"><meta http-equiv="X-UA-Compatible" content="IE=Edge" /><link rel="icon" type="image/png" href="img/favicon.png" /><title>Muvee Reviews - Video Magazine Bootstrap HTML5 template</title><!-- Bootstrap core CSS -->
-<link href="static/css/bootstrap.css" rel="stylesheet"><!-- Custom styles for this template -->
-<link rel="stylesheet" href="static/css/screen.css">
-<link rel="stylesheet" href="static/css/animation.css">
+<link href="static/<{$_template}>/css/bootstrap.css" rel="stylesheet"><!-- Custom styles for this template -->
+<link rel="stylesheet" href="static/<{$_template}>/css/screen.css">
+<link rel="stylesheet" href="static/<{$_template}>/css/animation.css">
 <!--[if IE 7]><![endif]-->
-<link rel="stylesheet" href="static/css/font-awesome.css">
-<!--[if lt IE 8]><link rel="stylesheet" href="static/css/ie.css" type="text/css" media="screen, projection"><![endif]-->
-<link href="static/css/lity.css" rel="stylesheet">
+<link rel="stylesheet" href="static/<{$_template}>/css/font-awesome.css">
+<!--[if lt IE 8]><link rel="stylesheet" href="static/<{$_template}>/css/ie.css" type="text/css" media="screen, projection"><![endif]-->
+<link href="static/<{$_template}>/css/lity.css" rel="stylesheet">
 </head>
 
 <body>
@@ -16,10 +16,10 @@
         <div class="row header-top">
             <div class="col-lg-3 col-md-6 col-sm-5 col-xs-8">
                 <a class="main-logo" href="index.html#">
-                    <img src="static/img/main-logo.png" class="main-logo img-responsive" alt="<{$site_info.web_name}>" title="<{$site_info.web_name}>">
+                    <img src="static/<{$_template}>/img/main-logo.png" class="main-logo img-responsive" alt="<{$site_info.web_name}>" title="<{$site_info.web_name}>">
                 </a>
             </div>
-            <div class="col-lg-6 hidden-md text-center hidden-sm hidden-xs"><img src="static/img/banners/banner-sm.jpg" class="img-responsive" alt="Muvee Reviews Video Magazine HTML5 Bootstrap"></div>
+            <div class="col-lg-6 hidden-md text-center hidden-sm hidden-xs"><img src="static/<{$_template}>/img/banners/banner-sm.jpg" class="img-responsive" alt="Muvee Reviews Video Magazine HTML5 Bootstrap"></div>
             <div class="col-lg-3 col-md-6 col-sm-7 hidden-xs">
                 <div class="right-box"><button type="button" class="access-btn" data-toggle="modal" data-target="#enquirypopup">ge</button></div>
             </div>

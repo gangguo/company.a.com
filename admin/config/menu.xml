@@ -1,41 +1,38 @@
 <menus>
 
-    <menu name='网站管理'  icon='fa fa-gears' id='webstationManagement' >
-        <menu name='导航菜单' ct='system' ac='menu_index' icon='fa fa-dashboard' default='true' />
-        <menu name='基础设置' ct='system' ac='baise_config' icon='fa fa-dashboard'  />
-        <menu name='简介内容' ct='system' ac='basic_content' icon='fa fa-file-text-o' display='' />
-        <menu name='友情链接' ct='system' ac='friend_link' icon='fa fa-dashboard'  />
-        <menu name='留言管理' ct='message' ac='list' icon='fa fa-dashboard'  />
+    <menu name='网站管理'  icon='fa fa-cog' id='webstationManagement' >
+        <menu name='模版设置' ct='system' ac='template' icon='fa fa-th-large' default='true' />
+        <menu name='导航菜单' ct='system' ac='menu_index' icon='fa fa-bars' default='true' />
+        <menu name='基础设置' ct='system' ac='baise_config' icon='fa fa-wrench'  />
+        <menu name='简介内容' ct='system' ac='basic_content' icon='fa fa-text-width' display='' />
+        <menu name='友情链接' ct='system' ac='friend_link' icon='fa fa-link'  />
+        <menu name='留言管理' ct='message' ac='list' icon='fa fa-comments'  />
     </menu>
 
-     <menu name='产品管理'  icon='fa fa-gears' id='galleryManagement' >
-        <menu name='产品列表' ct='gallery' ac='list' icon='fa fa-dashboard'  />
-        <menu name='标签管理' ct='labes' ac='list' icon='fa fa-dashboard'  />
+     <menu name='产品管理'  icon='fa fa-gift' id='galleryManagement' >
+        <menu name='产品列表' ct='gallery' ac='list' icon='fa fa-list'  />
+        <menu name='标签管理' ct='labes' ac='list' icon='fa fa-tags'  />
     </menu>
 
-    <menu name='视频管理'  icon='fa fa-gears' id='videosManagement' >
-        <menu name='视频列表' ct='video' ac='list' icon='fa fa-dashboard'  />
-        <menu name='分类管理' ct='cates' ac='list' icon='fa fa-dashboard'  />
-        <menu name='标签管理' ct='labes' ac='list' icon='fa fa-dashboard'  />
-        <menu name='地区管理' ct='areas' ac='list' icon='fa fa-dashboard'  />
-        <menu name='添加视频' ct='video' ac='add' icon='fa fa-dashboard'  />
+    <menu name='视频管理'  icon='fa fa-video-camera' id='videosManagement' >
+        <menu name='视频列表' ct='video' ac='list' icon='fa fa-list'  />
+        <menu name='标签管理' ct='labes' ac='list' icon='fa fa-tags'  />
+        <menu name='添加视频' ct='video' ac='add' icon='fa fa-plus-square'  />
     </menu>
 
-    <menu name='图集管理'  icon='fa fa-gears' id='magesManagement' >
-        <menu name='图片列表' ct='images' ac='list' icon='fa fa-dashboard'  />
-        <menu name='标签管理' ct='labes' ac='list' icon='fa fa-dashboard'  />
+    <menu name='图集管理'  icon='fa fa-picture-o' id='magesManagement' >
+        <menu name='图片列表' ct='images' ac='list' icon='fa fa-list'  />
+        <menu name='标签管理' ct='labes' ac='list' icon='fa fa-tags'  />
     </menu>
 
-    <menu name='小说管理'  icon='fa fa-gears' id='novelsManagement' >
-        <menu name='小说列表' ct='novel' ac='list' icon='fa fa-dashboard'  />
-        <menu name='标签管理' ct='labes' ac='list' icon='fa fa-dashboard'  />
-        <menu name='分类管理' ct='cates' ac='list' icon='fa fa-dashboard'  />
-
+    <menu name='小说管理'  icon='fa fa-book' id='novelsManagement' >
+        <menu name='小说列表' ct='novel' ac='list' icon='fa fa-list'  />
+        <menu name='标签管理' ct='labes' ac='list' icon='fa fa-tags'  />
     </menu>
 
 
     <menu name='控制中心'  icon='fa fa-gears' id='systemManagement' >
-        <menu name='菜单设置' ct='system' ac='menus' icon='fa fa-dashboard'  />
+        <menu name='菜单设置' ct='system' ac='menus' icon='fa fa-bars'  />
         <menu name='用户管理' icon='fa fa-user'   >
             <menu name='用户组管理' ct='admin' ac='grouplist' icon='fa fa-users' display='' />
             <menu name='用户列表' ct='admin' ac='userlist' icon='fa fa-user' display='' />

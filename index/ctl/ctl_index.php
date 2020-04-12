@@ -195,18 +195,18 @@ class ctl_index extends ctl_base
         if(!empty(req::$posts))
         {
             $data = [
-                'addtime' => TIME_SEPHP,
-                'uptime' => TIME_SEPHP,
-                'ip' => func::get_client_ip(),
                 'username' => req::$posts['username'],
                 'mobile' => req::$posts['mobile'],
                 'text' => req::$posts['message'],
             ];
 
-            if(false === pub_mod_message::insert($data))
+            if(0 > pub_mod_message::add_message($data))
             {
+                show_msg::error(pub_mod_message::$error_msg);
 
             }
+
+            show_msg::success('提交成功');
         }
 
         view::display('contact');
